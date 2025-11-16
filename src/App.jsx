@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="dashboard">
       <header className="header">
-        <h1>Dashboard</h1>
+        <h1>Listify</h1>
         <nav>
           <ul>
             <li><a href="#home">Home</a></li>
@@ -17,7 +17,7 @@ function App() {
       
       <main className="main-content">
         <div className="content-wrapper">
-          <h2>Welcome to your Dashboard</h2>
+          <h2>Welcome to your List</h2>
           <div className="cards">
             <div className="card">
               <h3>Total Users</h3>
