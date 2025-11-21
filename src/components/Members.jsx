@@ -15,7 +15,7 @@ export default function Members({ members, owner, currentUser, onAddMember, onRe
             <div className="member-controls">
               {isOwner && owner !== name && (
                 <>
-                  <button className="small-btn" onClick={() => onTransferOwnership(name)}>Převzít</button>
+                  <button className="small-btn" onClick={() => onTransferOwnership(name)}>Předat</button>
                   <button className="small-btn danger" onClick={() => onRemoveMember(name)}>Odebrat</button>
                 </>
               )}
