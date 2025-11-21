@@ -225,9 +225,37 @@ export default function App() {
 
   return (
     <div className="app">
+
+
       <header>
         <h1>{currentList ? currentList.name : 'Žádný seznam'}</h1>
-        <div className="owner-badge">{currentList && currentList.owner ? `Vlastník: ${currentList.owner}` : 'Žádný vlastník'}</div>
+        
+        {/* Pravá část hlavičky: Vlastník seznamu + Přihlášený uživatel */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          
+          
+          {/* Původní badge vlastníka */}
+          {/* 
+          <div className="owner-badge">
+            {currentList && currentList.owner ? `Vlastník: ${currentList.owner}` : 'Žádný vlastník'}
+          </div> */}  
+
+          
+          {/* Nové pole pro přihlášeného uživatele */}
+          <div className="current-user-info" style={{ fontSize: '0.95rem' }}>
+            {model.currentUser ? (
+              <span style={{ fontWeight: 'bold', color: '#2b7a78', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {/* Ikona panáčka (volitelné) */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                {model.currentUser}
+              </span>
+            ) : (
+              <span style={{ color: '#999', fontStyle: 'italic' }}>Nepřihlášen</span>
+            )}
+          </div>
+          
+        </div>
       </header>
 
       <section className="login">
