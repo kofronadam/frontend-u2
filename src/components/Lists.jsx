@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import Modal from './modal.jsx'
+import Modal from './Modal'
 
 export default function Lists({
   lists,
@@ -15,12 +15,12 @@ export default function Lists({
   const [newName, setNewName] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // nové stavy pro rename modal
+  
   const [showRenameModal, setShowRenameModal] = useState(false)
   const [renameValue, setRenameValue] = useState('')
 
   useEffect(() => {
-    // když se změní currentList, nastavíme výchozí hodnotu pro rename modal
+    
     if (currentList) setRenameValue(currentList.name || '')
     else setRenameValue('')
   }, [currentList])
@@ -60,34 +60,48 @@ export default function Lists({
 
   return (
     <section style={{ marginTop: 14, marginBottom: 6 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <select value={selectedId || ''} onChange={e => onSelect(e.target.value)} style={{ padding: 8, borderRadius: 6 }}>
-          {lists.map(l => (
-            <option key={l.id} value={l.id}>
-              {l.name} {l.owner ? ` (vlastník: ${l.owner})` : ''}
-            </option>
-          ))}
-        </select>
+      {/* Hlavní řádek: levá část (select + Vytvořit) a pravá část (Přejmenovat / Smazat) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: '1 1 auto' }}>
+          <select
+            value={selectedId || ''}
+            onChange={e => onSelect(e.target.value)}
+            style={{ padding: 8, borderRadius: 6, minWidth: 220, flex: '0 0 auto' }}
+          >
+            {lists.map(l => (
+              <option key={l.id} value={l.id}>
+                {l.name} {l.owner ? ` (vlastník: ${l.owner})` : ''}
+              </option>
+            ))}
+          </select>
 
-        <button onClick={openCreate} disabled={!currentUser}>
-          Vytvořit
-        </button>
-      </div>
+          <button onClick={openCreate} disabled={!currentUser}>
+            Vytvořit
+          </button>
+        </div>
 
-      {currentList && (
-        <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-          {/* tlačítko pro otevření rename modalu */}
-          <button onClick={openRename} disabled={!isOwner}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: '0 0 auto' }}>
+          {/* tlačítka napravo */}
+          <button
+            onClick={openRename}
+            disabled={!currentList || !isOwner}
+            title={currentList ? (isOwner ? 'Přejmenovat tento seznam' : 'Pouze vlastník může přejmenovat') : 'Vyber seznam'}
+          >
             Přejmenovat
           </button>
 
-          <button onClick={() => onDeleteCurrent()} className="danger" disabled={!isOwner}>
+          <button
+            onClick={() => onDeleteCurrent()}
+            className="danger"
+            disabled={!currentList || !isOwner}
+            title={currentList ? (isOwner ? 'Smazat tento seznam' : 'Pouze vlastník může smazat') : 'Vyber seznam'}
+          >
             Smazat seznam
           </button>
         </div>
-      )}
+      </div>
 
-      {/* modal pro vytváření nového seznamu */}
+      {/* Modal pro vytváření nového seznamu */}
       <Modal
         isOpen={showCreateModal}
         title="Vytvořit nový seznam"
@@ -111,7 +125,7 @@ export default function Lists({
         </div>
       </Modal>
 
-      {/* modal pro přejmenování aktuálního seznamu */}
+      {/* Modal pro přejmenování aktuálního seznamu */}
       <Modal
         isOpen={showRenameModal}
         title="Přejmenovat seznam"
