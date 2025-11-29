@@ -54,6 +54,7 @@ function loadModel() {
 export default function App() {
   const [model, setModel] = useState(() => loadModel())
   const [usernameInput, setUsernameInput] = useState('')
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   // persist
   useEffect(() => {
@@ -174,6 +175,11 @@ export default function App() {
     setShowLoginModal(false)
   }
 
+  // logout without modifying memberships (just clear currentUser)
+  function logout() {
+    setModel(prev => ({ ...prev, currentUser: null }))
+  }
+
   function leaveCurrentList() {
     if (!model.currentUser || !currentList) return
     if (!confirm('Opravdu chceš opustit tento nákupní seznam?')) return
@@ -228,45 +234,41 @@ export default function App() {
   return (
     <div className="app">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {/*Levá část hlavičky: Vlastník seznamu + Název sezamu */}
         <div>
           <h1 style={{ margin: 0 }}>{currentList ? currentList.name : 'Žádný seznam'}</h1>
           <div className="owner-badge">{currentList && currentList.owner ? `Vlastník: ${currentList.owner}` : 'Žádný vlastník'}</div>
         </div>
-      
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>         
-          {/* Nové pole pro přihlášeného uživatele */}
-          <div className="current-user-info" style={{ fontSize: '0.95rem' }}>
-            {model.currentUser ? (
-              <span style={{ fontWeight: 'bold', color: '#2b7a78', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {/* Ikona panáčka (volitelné) */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                {model.currentUser}
-              </span>
-            ) : (
-              <span style={{ color: '#999', fontStyle: 'italic' }}>Nepřihlášen</span>
-            )}
-          </div>
-          
+
+        {/* Přesunuté přihlašování do headeru (modal jako u přejmenování) */}
+        <div style={{ textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center' }}>
+          {!model.currentUser ? (
+            <button onClick={() => { setShowLoginModal(true); setUsernameInput('') }}>
+              Přihlásit
+            </button>
+          ) : (
+            <>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 13, color: '#666' }}>Přihlášen:</div>
+                <div style={{ fontWeight: 600 }}>{model.currentUser}</div>
+              </div>
+              {/* ikonové tlačítko místo textu "Odhlásit" */}
+              <button
+                className="icon-btn"
+                onClick={logout}
+                title="Odhlásit"
+                aria-label="Odhlásit"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M5 3h10a2 2 0 0 1 2 2v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 12h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15 9l4 3-4 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       </header>
-
-      <section className="login">
-        <input
-          placeholder="Zadej své jméno (uživatel)"
-          value={usernameInput}
-          onChange={e => setUsernameInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && login(usernameInput.trim())}
-        />
-        <button onClick={() => login(usernameInput.trim())} disabled={!usernameInput.trim()}>
-          Přihlásit
-        </button>
-        <button className="danger" onClick={leaveCurrentList} style={{ display: isMember ? 'inline-block' : 'none' }}>
-          Odejít ze seznamu
-        </button>
-      </section>
 
       <Lists
         lists={listsSorted}
@@ -306,6 +308,28 @@ export default function App() {
       ) : (
         <div style={{ padding: 20, color: '#666' }}>Vyber nebo vytvoř nový seznam.</div>
       )}
+
+      {/* Modal pro přihlášení (stejný pattern jako u přejmenování) */}
+      <Modal
+        isOpen={showLoginModal}
+        title="Přihlásit"
+        onClose={() => { setShowLoginModal(false); setUsernameInput('') }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <input
+            autoFocus
+            placeholder="Zadej své jméno (uživatel)"
+            value={usernameInput}
+            onChange={e => setUsernameInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { login(usernameInput.trim()) } }}
+            style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
+          />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button className="small-btn" onClick={() => { setShowLoginModal(false); setUsernameInput('') }}>Zrušit</button>
+            <button onClick={() => login(usernameInput.trim())} disabled={!usernameInput.trim()}>Přihlásit</button>
+          </div>
+        </div>
+      </Modal>
 
       <footer>
         <small>Data se ukládají lokálně v prohlížeči (localStorage).</small>

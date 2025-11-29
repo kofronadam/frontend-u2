@@ -68,9 +68,10 @@ export default function Lists({
             onChange={e => onSelect(e.target.value)}
             style={{ padding: 8, borderRadius: 6, minWidth: 220, flex: '0 0 auto' }}
           >
+            {/* byl odebrán vlastník ze zobrazení, zobrazuje se v headeru */}
             {lists.map(l => (
               <option key={l.id} value={l.id}>
-                {l.name} {l.owner ? ` (vlastník: ${l.owner})` : ''}
+                {l.name}
               </option>
             ))}
           </select>
