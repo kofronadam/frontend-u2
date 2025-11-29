@@ -1,41 +1,44 @@
 import React, { useState } from 'react'
+import Modal from './Modal'
 
 export default function Items({ items, currentUser, members, onAddItem, onToggleDone, onRemoveItem }) {
-  const [itemInput, setItemInput] = useState('')
   const [filterUnresolved, setFilterUnresolved] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [itemValue, setItemValue] = useState('')
 
   const isMember = currentUser && members.includes(currentUser)
+
+  function openAdd() {
+    if (!isMember) {
+      alert('Musíš být členem seznamu, abys přidal položku.')
+      return
+    }
+    setItemValue('')
+    setShowAddModal(true)
+  }
+
+  function handleAddConfirm() {
+    const v = (itemValue || '').trim()
+    if (!v) return
+    onAddItem(v)
+    setItemValue('')
+    setShowAddModal(false)
+  }
 
   const itemsToShow = items.filter(it => !filterUnresolved || !it.done)
 
   return (
     <section className="items">
-      <h2>Položky</h2>
-
-      <div className="item-add">
-        <input
-          placeholder="Přidat položku..."
-          value={itemInput}
-          onChange={e => setItemInput(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              if (!isMember) {
-                alert('Musíš být členem seznamu, abys přidal položku.')
-                return
-              }
-              onAddItem(itemInput.trim())
-              setItemInput('')
-            }
-          }}
-          disabled={!isMember}
-        />
-        <button onClick={() => { if (isMember) { onAddItem(itemInput.trim()); setItemInput('') } else alert('Pouze člen může přidávat položky') }} disabled={!isMember || !itemInput.trim()}>
-          Přidat
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <h2 style={{ margin: 0 }}>Položky</h2>
+        <button onClick={openAdd} disabled={!isMember}>Přidat položku</button>
       </div>
 
-      <div className="filters">
-        <label><input type="checkbox" checked={filterUnresolved} onChange={e => setFilterUnresolved(e.target.checked)} /> Zobrazit jen nevyřešené</label>
+      <div className="filters" style={{ marginBottom: 8 }}>
+        <label>
+          <input type="checkbox" checked={filterUnresolved} onChange={e => setFilterUnresolved(e.target.checked)} />
+          {' '}Zobrazit jen nevyřešené
+        </label>
       </div>
 
       <ul className="items-list">
@@ -49,6 +52,27 @@ export default function Items({ items, currentUser, members, onAddItem, onToggle
         ))}
         {itemsToShow.length === 0 && <li className="empty">Žádné položky k zobrazení</li>}
       </ul>
+
+      <Modal
+        isOpen={showAddModal}
+        title="Přidat položku"
+        onClose={() => { setShowAddModal(false); setItemValue('') }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <input
+            autoFocus
+            placeholder="Název položky"
+            value={itemValue}
+            onChange={e => setItemValue(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddConfirm() }}
+            style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
+          />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button className="small-btn" onClick={() => { setShowAddModal(false); setItemValue('') }}>Zrušit</button>
+            <button onClick={handleAddConfirm} disabled={!itemValue.trim()}>Přidat</button>
+          </div>
+        </div>
+      </Modal>
     </section>
   )
 }
