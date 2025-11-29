@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import Lists from './components/Lists'
 import Members from './components/Members'
 import Items from './components/Items'
+import Modal from './components/Modal'
 
 const STORAGE_KEY = 'shopping_list_vite_v2'
 
@@ -170,6 +171,7 @@ export default function App() {
       return { ...prev, currentUser: name, lists: updatedLists2, selectedListId: prev.selectedListId }
     })
     setUsernameInput('')
+    setShowLoginModal(false)
   }
 
   function leaveCurrentList() {
@@ -225,22 +227,15 @@ export default function App() {
 
   return (
     <div className="app">
-
-
-      <header>
-        <h1>{currentList ? currentList.name : 'Žádný seznam'}</h1>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/*Levá část hlavičky: Vlastník seznamu + Název sezamu */}
+        <div>
+          <h1 style={{ margin: 0 }}>{currentList ? currentList.name : 'Žádný seznam'}</h1>
+          <div className="owner-badge">{currentList && currentList.owner ? `Vlastník: ${currentList.owner}` : 'Žádný vlastník'}</div>
+        </div>
+      
         
-        {/* Pravá část hlavičky: Vlastník seznamu + Přihlášený uživatel */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          
-          
-          {/* Původní badge vlastníka */}
-          {/* 
-          <div className="owner-badge">
-            {currentList && currentList.owner ? `Vlastník: ${currentList.owner}` : 'Žádný vlastník'}
-          </div> */}  
-
-          
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>         
           {/* Nové pole pro přihlášeného uživatele */}
           <div className="current-user-info" style={{ fontSize: '0.95rem' }}>
             {model.currentUser ? (

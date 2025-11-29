@@ -35,7 +35,7 @@ export default function Members({ members, owner, currentUser, onAddMember, onRe
         {members.map(name => (
           <li key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
             <span>
-              {name} {owner === name && <strong style={{ color: '#444' }}>(vlastník)</strong>}
+              {name} {owner === name && <strong style={{ color: '#444' }}></strong>}
             </span>
             <div className="member-controls">
               {isOwner && owner !== name && (
