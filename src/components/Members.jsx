@@ -1,9 +1,15 @@
 import React, { useState } from 'react'
+import { useApp } from '../context/AppContext'
 import Modal from './Modal'
 
-export default function Members({ members, owner, currentUser, onAddMember, onRemoveMember, onTransferOwnership, isOwner }) {
+export default function Members({ list }) {
+  const { currentUser, updateList } = useApp()
   const [showAddModal, setShowAddModal] = useState(false)
   const [addValue, setAddValue] = useState('')
+
+  const isOwner = list.owner === currentUser
+  const members = list.members || []
+  const owner = list.owner
 
   function openAdd() {
     if (!isOwner) {
@@ -17,9 +23,45 @@ export default function Members({ members, owner, currentUser, onAddMember, onRe
   function handleAddConfirm() {
     const v = (addValue || '').trim()
     if (!v) return
-    onAddMember(v)
+    
+    // Kontrola, zda člen už není v seznamu
+    if (members.includes(v)) {
+      alert('Tento člen už je v seznamu.')
+      return
+    }
+    
+    updateList(list.id, {
+      members: [... members, v]
+    })
+    
     setAddValue('')
     setShowAddModal(false)
+  }
+
+  function handleRemoveMember(memberName) {
+    if (!isOwner) {
+      alert('Pouze vlastník může odebírat členy.')
+      return
+    }
+    
+    if (window.confirm(`Opravdu chcete odebrat člena ${memberName}?`)) {
+      updateList(list.id, {
+        members: members.filter(m => m !== memberName)
+      })
+    }
+  }
+
+  function handleTransferOwnership(newOwner) {
+    if (!isOwner) {
+      alert('Pouze vlastník může převádět vlastnictví.')
+      return
+    }
+    
+    if (window.confirm(`Opravdu chcete převést vlastnictví na ${newOwner}?`)) {
+      updateList(list.id, {
+        owner: newOwner
+      })
+    }
   }
 
   return (
@@ -35,18 +77,23 @@ export default function Members({ members, owner, currentUser, onAddMember, onRe
         {members.map(name => (
           <li key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
             <span>
-              {name} {owner === name && <strong style={{ color: '#444' }}></strong>}
+              {name} {owner === name && <strong style={{ color: '#444' }}>(vlastník)</strong>}
             </span>
             <div className="member-controls">
               {isOwner && owner !== name && (
                 <>
-                  <button className="small-btn" onClick={() => onTransferOwnership(name)}>Převzít</button>
-                  <button className="small-btn danger" onClick={() => onRemoveMember(name)}>Odebrat</button>
+                  <button className="small-btn" onClick={() => handleTransferOwnership(name)}>Převést</button>
+                  <button className="small-btn danger" onClick={() => handleRemoveMember(name)}>Odebrat</button>
                 </>
               )}
             </div>
           </li>
         ))}
+        {members.length === 0 && (
+          <li style={{ color: '#666', fontStyle: 'italic' }}>
+            Žádní členové
+          </li>
+        )}
       </ul>
 
       {/* Modal pro přidání člena */}
@@ -66,7 +113,7 @@ export default function Members({ members, owner, currentUser, onAddMember, onRe
           />
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button className="small-btn" onClick={() => { setShowAddModal(false); setAddValue('') }}>Zrušit</button>
-            <button onClick={handleAddConfirm} disabled={!addValue.trim()}>Přidat</button>
+            <button onClick={handleAddConfirm} disabled={! addValue.trim()}>Přidat</button>
           </div>
         </div>
       </Modal>

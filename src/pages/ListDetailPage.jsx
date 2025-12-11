@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import Members from '../components/Members'
+import Members from '../components/MembersSimple'
 import Items from '../components/Items'
 import LoginModal from '../components/LoginModal'
 
