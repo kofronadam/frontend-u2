@@ -1,13 +1,15 @@
 import React, { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
-import Members from '../components/MembersSimple'
+import Members from '../components/Members'
 import Items from '../components/Items'
 import LoginModal from '../components/LoginModal'
+import AccessRequest from '../components/AccessRequest'
+import AccessRequests from '../components/AccessRequests'
 
 export default function ListDetailPage() {
   const { listId } = useParams()
-  const { lists, currentUser, logout } = useApp() // přidat logout
+  const { lists, currentUser, logout } = useApp()
   const [showLoginModal, setShowLoginModal] = useState(false)
   
   const list = lists.find(l => l.id === listId)
@@ -17,7 +19,7 @@ export default function ListDetailPage() {
   }
 
   const isOwner = list.owner === currentUser
-  const isMember = list.members.includes(currentUser)
+  const isMember = list. members.includes(currentUser)
   const hasAccess = isOwner || isMember
 
   const handleLogout = () => {
@@ -49,10 +51,11 @@ export default function ListDetailPage() {
         </div>
       </header>
 
-      {hasAccess ?  (
+      {hasAccess ? (
         <div className="detail-content">
           <div className="detail-sidebar">
             <Members list={list} />
+            {isOwner && <AccessRequests list={list} />}
           </div>
           <div className="detail-main">
             <Items list={list} />
@@ -60,15 +63,19 @@ export default function ListDetailPage() {
         </div>
       ) : (
         <div className="no-access">
-          <p>Nemáte oprávnění k zobrazení tohoto seznamu.</p>
-          <p>Požádejte vlastníka ({list.owner}) o přidání mezi členy.</p>
-          {!currentUser && (
-            <button 
-              onClick={() => setShowLoginModal(true)}
-              className="login-button"
-            >
-              Nebo se přihlaste
-            </button>
+          {currentUser ? (
+            <AccessRequest list={list} />
+          ) : (
+            <>
+              <p>Nemáte oprávnění k zobrazení tohoto seznamu.</p>
+              <p>Požádejte vlastníka ({list.owner}) o přidání mezi členy.</p>
+              <button 
+                onClick={() => setShowLoginModal(true)}
+                className="login-button"
+              >
+                Nebo se přihlaste
+              </button>
+            </>
           )}
         </div>
       )}

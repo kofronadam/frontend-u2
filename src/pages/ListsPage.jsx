@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import LoginModal from '../components/LoginModal'
 import ListCard from '../components/ListCard'
 import ListFilter from '../components/ListFilter'
+import NotificationBell from '../components/NotificationBell'
 
 export default function ListsPage() {
   const { lists, currentUser, createList, logout } = useApp() // přidat logout
@@ -41,6 +42,7 @@ export default function ListsPage() {
       <header className="page-header">
         <h1>Nákupní seznamy</h1>
         <div className="header-actions">
+          {currentUser && <NotificationBell />}
           {currentUser ?  (
             <div className="user-section">
               <span className="user-info">

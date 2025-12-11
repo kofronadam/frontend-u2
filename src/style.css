@@ -712,3 +712,152 @@ footer {
     gap: 10px;
   }
 }
+
+.access-request {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.access-request.sent {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.request-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.request-form textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 10px 0;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.access-requests-panel {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.access-request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.request-info {
+  flex: 1;
+}
+
+.request-info strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.request-info small {
+  color: #666;
+  font-size: 0.8em;
+}
+
+.request-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.approve-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.reject-button,
+.cancel-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.send-button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.notification-bell {
+  position: relative;
+}
+
+.bell-button {
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 350px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 10px;
+}
+
+.notification-item {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.small {
+  padding: 4px 8px;
+  font-size: 0.8em;
+}
