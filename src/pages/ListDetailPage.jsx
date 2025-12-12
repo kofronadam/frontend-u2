@@ -37,7 +37,7 @@ export default function ListDetailPage() {
           {currentUser ? (
             <div className="user-section">
               <span className="user-info">
-                Přihlášen jako: <strong>{currentUser}</strong>
+                Přihlášen: <strong>{currentUser}</strong>
               </span>
               <button onClick={handleLogout} className="logout-button">
                 Odhlásit se

@@ -15,8 +15,9 @@ export default function ListCard({ list }) {
 
   const isOwner = list.owner === currentUser
   const isMember = list.members.includes(currentUser)
-  const itemsCount = list. items?.length || 0
-  const completedCount = list. items?.filter(item => item.resolved)?.length || 0
+  const itemsCount = list.items?.length || 0
+
+  const completedCount = list.items?.filter(item => item.done)?.length || 0
 
   return (
     <Link to={`/list/${list.id}`} className="list-card">
@@ -40,12 +41,23 @@ export default function ListCard({ list }) {
         
         {list.members.length > 0 && (
           <div className="members">
-            Členové: {list.members.join(', ')}
+            Členové: {list. members.join(', ')}
           </div>
         )}
         
-        <div className="progress">
-          {completedCount}/{itemsCount} položek dokončeno
+        {/* Přidáno zobrazení progress baru */}
+        <div className="progress-container">
+          <div className="progress">
+            {completedCount}/{itemsCount} položek dokončeno
+          </div>
+          {itemsCount > 0 && (
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${(completedCount / itemsCount) * 100}%` }}
+              ></div>
+            </div>
+          )}
         </div>
         
         <div className="access-info">

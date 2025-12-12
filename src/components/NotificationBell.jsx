@@ -50,7 +50,7 @@ export default function NotificationBell() {
                 </button>
                 <button 
                   onClick={() => markNotificationAsRead(notification.id)}
-                  className="dismiss-button small"
+                  className="small-btn"
                 >
                   Označit jako přečtené
                 </button>
