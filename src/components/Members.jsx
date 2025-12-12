@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import Modal from './Modal'
 
 export default function Members({ list }) {
   const { currentUser, updateList } = useApp()
@@ -24,7 +23,6 @@ export default function Members({ list }) {
     const v = (addValue || '').trim()
     if (!v) return
     
-    // Kontrola, zda člen už není v seznamu
     if (members.includes(v)) {
       alert('Tento člen už je v seznamu.')
       return
@@ -46,7 +44,7 @@ export default function Members({ list }) {
     
     if (window.confirm(`Opravdu chcete odebrat člena ${memberName}?`)) {
       updateList(list.id, {
-        members: members.filter(m => m !== memberName)
+        members:  members.filter(m => m !== memberName)
       })
     }
   }
@@ -57,66 +55,115 @@ export default function Members({ list }) {
       return
     }
     
-    if (window.confirm(`Opravdu chcete převést vlastnictví na ${newOwner}?`)) {
+    if (window. confirm(`Opravdu chcete převést vlastnictví na ${newOwner}?`)) {
       updateList(list.id, {
         owner: newOwner
       })
     }
   }
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleAddConfirm()
+    }
+  }
+
   return (
     <div className="members">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <h3 style={{ margin: 0 }}>Členové</h3>
-        <button onClick={openAdd} disabled={!isOwner} style={{ marginLeft: 12 }}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="mb-0">Členové</h3>
+        <button 
+          onClick={openAdd} 
+          disabled={!isOwner}
+          className="btn btn-primary btn-sm"
+        >
           Přidat člena
         </button>
       </div>
 
       <ul>
-        {members.map(name => (
-          <li key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
-            <span>
-              {name} {owner === name && <strong style={{ color: '#444' }}>(vlastník)</strong>}
+        {members. map(name => (
+          <li key={name} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+            <span className="text-gray-900">
+              {name} {owner === name && <strong className="text-gray-600">(vlastník)</strong>}
             </span>
-            <div className="member-controls">
+            <div className="member-controls flex gap-2">
               {isOwner && owner !== name && (
                 <>
-                  <button className="small-btn" onClick={() => handleTransferOwnership(name)}>Převést</button>
-                  <button className="small-btn danger" onClick={() => handleRemoveMember(name)}>Odebrat</button>
+                  <button 
+                    className="small-btn" 
+                    onClick={() => handleTransferOwnership(name)}
+                  >
+                    Převést
+                  </button>
+                  <button 
+                    className="small-btn danger" 
+                    onClick={() => handleRemoveMember(name)}
+                  >
+                    Odebrat
+                  </button>
                 </>
               )}
             </div>
           </li>
         ))}
         {members.length === 0 && (
-          <li style={{ color: '#666', fontStyle: 'italic' }}>
+          <li className="text-gray-500 italic py-4 text-center">
             Žádní členové
           </li>
         )}
       </ul>
 
       {/* Modal pro přidání člena */}
-      <Modal
-        isOpen={showAddModal}
-        title="Přidat člena"
-        onClose={() => { setShowAddModal(false); setAddValue('') }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <input
-            autoFocus
-            placeholder="Jméno člena"
-            value={addValue}
-            onChange={e => setAddValue(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAddConfirm() }}
-            style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
-          />
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button className="small-btn" onClick={() => { setShowAddModal(false); setAddValue('') }}>Zrušit</button>
-            <button onClick={handleAddConfirm} disabled={! addValue.trim()}>Přidat</button>
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Přidat člena</h3>
+              <button 
+                onClick={() => setShowAddModal(false)} 
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label" htmlFor="member-name">
+                  Jméno člena: 
+                </label>
+                <input
+                  id="member-name"
+                  type="text"
+                  className="form-input"
+                  placeholder="Zadejte jméno člena"
+                  value={addValue}
+                  onChange={(e) => setAddValue(e. target.value)}
+                  onKeyPress={handleKeyPress}
+                  autoFocus
+                />
+              </div>
+              
+              <div className="modal-actions">
+                <button 
+                  onClick={() => setShowAddModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Zrušit
+                </button>
+                <button 
+                  onClick={handleAddConfirm}
+                  disabled={!addValue. trim()}
+                  className="btn btn-primary"
+                >
+                  Přidat člena
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </div>
   )
 }

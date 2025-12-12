@@ -30,7 +30,7 @@ export default function AccessRequests({ list }) {
             </button>
             <button 
               onClick={() => rejectAccessRequest(list.id, request.id)}
-              className="reject-button"
+              className="small-btn reject-button"
             >
               Zamítnout
             </button>

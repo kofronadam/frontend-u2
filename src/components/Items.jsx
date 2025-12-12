@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import Modal from './Modal'
 
 export default function Items({ list }) {
   const { currentUser, updateList } = useApp()
@@ -10,7 +9,7 @@ export default function Items({ list }) {
 
   const items = list.items || []
   const members = list.members || []
-  const isOwner = list.owner === currentUser
+  const isOwner = list. owner === currentUser
   const isMember = currentUser && (members.includes(currentUser) || isOwner)
 
   function openAdd() {
@@ -27,15 +26,15 @@ export default function Items({ list }) {
     if (!v) return
     
     const newItem = {
-      id:  Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: Date. now().toString(36) + Math.random().toString(36).slice(2, 7),
       text: v,
       done: false,
       addedBy: currentUser,
       ts: Date.now()
     }
     
-    updateList(list.id, {
-      items: [... items, newItem]
+    updateList(list. id, {
+      items: [...items, newItem]
     })
     
     setItemValue('')
@@ -45,7 +44,7 @@ export default function Items({ list }) {
   function handleToggleDone(itemId, done) {
     updateList(list.id, {
       items: items.map(item => 
-        item.id === itemId ? { ...item, done } : item
+        item. id === itemId ? { ...item, done } : item
       )
     })
   }
@@ -63,33 +62,45 @@ export default function Items({ list }) {
     }
   }
 
-  const itemsToShow = items. filter(it => !filterUnresolved || !it.done)
+  const handleKeyPress = (e) => {
+    if (e. key === 'Enter') {
+      handleAddConfirm()
+    }
+  }
+
+  const itemsToShow = items.filter(it => !filterUnresolved || ! it.done)
 
   return (
     <section className="items">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent:  'space-between', marginBottom: 8 }}>
-        <h2 style={{ margin: 0 }}>Položky</h2>
-        <button onClick={openAdd} disabled={!isMember}>Přidat položku</button>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="mb-0">Položky</h2>
+        <button 
+          onClick={openAdd} 
+          disabled={!isMember}
+          className="btn btn-primary"
+        >
+          Přidat položku
+        </button>
       </div>
 
-      <div className="filters" style={{ marginBottom: 8 }}>
-        <label>
+      <div className="filters mb-4">
+        <label className="flex items-center gap-2 text-sm">
           <input 
             type="checkbox" 
             checked={filterUnresolved} 
-            onChange={e => setFilterUnresolved(e.target.checked)} 
+            onChange={(e) => setFilterUnresolved(e.target.checked)} 
           />
-          {' '}Zobrazit jen nevyřešené
+          Zobrazit jen nevyřešené
         </label>
       </div>
 
       <ul className="items-list">
         {itemsToShow.map(it => (
-          <li key={it.id} className={it.done ? 'done' : ''}>
+          <li key={it. id} className={it.done ? 'done' : ''}>
             <input 
               type="checkbox" 
               checked={it.done} 
-              onChange={e => handleToggleDone(it.id, e.target.checked)} 
+              onChange={(e) => handleToggleDone(it.id, e. target.checked)} 
             />
             <div className="item-text">{it.text}</div>
             <div className="item-meta">
@@ -97,7 +108,7 @@ export default function Items({ list }) {
             </div>
             {isMember && (
               <button 
-                className="small-btn danger" 
+                className="btn btn-sm btn-danger" 
                 onClick={() => handleRemoveItem(it.id)}
               >
                 Odstranit
@@ -112,36 +123,56 @@ export default function Items({ list }) {
         )}
       </ul>
 
-      <Modal
-        isOpen={showAddModal}
-        title="Přidat položku"
-        onClose={() => { setShowAddModal(false); setItemValue('') }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <input
-            autoFocus
-            placeholder="Název položky"
-            value={itemValue}
-            onChange={e => setItemValue(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAddConfirm() }}
-            style={{ padding: 8, borderRadius: 6, border: '1px solid #ddd' }}
-          />
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button 
-              className="small-btn" 
-              onClick={() => { setShowAddModal(false); setItemValue('') }}
-            >
-              Zrušit
-            </button>
-            <button 
-              onClick={handleAddConfirm} 
-              disabled={!itemValue.trim()}
-            >
-              Přidat
-            </button>
+      {/* Modal pro přidání položky */}
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Přidat položku</h3>
+              <button 
+                onClick={() => setShowAddModal(false)} 
+                className="modal-close"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label className="form-label" htmlFor="item-text">
+                  Název položky:
+                </label>
+                <input
+                  id="item-text"
+                  type="text"
+                  className="form-input"
+                  placeholder="Co potřebujete koupit/udělat?"
+                  value={itemValue}
+                  onChange={(e) => setItemValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  autoFocus
+                />
+              </div>
+              
+              <div className="modal-actions">
+                <button 
+                  onClick={() => setShowAddModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Zrušit
+                </button>
+                <button 
+                  onClick={handleAddConfirm}
+                  disabled={!itemValue.trim()}
+                  className="btn btn-primary"
+                >
+                  Přidat položku
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
     </section>
   )
 }
