@@ -1209,4 +1209,20 @@ button:not([class*="btn"]):hover {
   box-shadow: var(--shadow-md);
 }
 
+.text-2xl {
+  font-size: 1.5rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+.w-12 {
+  width: 3rem;
+}
+
+.h-12 {
+  height: 3rem;
+}
+
 /* Konec souboru */
