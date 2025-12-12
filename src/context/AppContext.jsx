@@ -1,37 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { apiService } from '../services/apiService.js'
 
-const STORAGE_KEY = 'shopping_list_vite_v2'
-
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-
-const makeList = ({ name = 'Nový seznam', owner = null, members = [], items = [] } = {}) => ({
-  id: uid(),
-  name,
-  owner,
-  members,
-  items,
-  accessRequests: [] // Nové pole pro žádosti o přístup
-})
-
-const defaultModel = {
-  lists: [],
-  currentUser: null,
-  notifications: [] // Notifikace pro uživatele
-}
-
-function loadModel() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { ...defaultModel }
-    return { ...defaultModel, ...JSON. parse(raw) }
-  } catch (e) {
-    console.warn('Chyba při načítání localStorage', e)
-    return { ...defaultModel }
-  }
-}
-
+// Vytvoření kontextu
 const AppContext = createContext()
 
+// Hook pro použití kontextu
 export const useApp = () => {
   const context = useContext(AppContext)
   if (!context) {
@@ -40,198 +13,450 @@ export const useApp = () => {
   return context
 }
 
+// AppProvider komponenta
 export const AppProvider = ({ children }) => {
-  const [model, setModel] = useState(() => loadModel())
+  // Globální stav aplikace
+  const [state, setState] = useState({
+    lists:  [],
+    currentUser: null,
+    notifications: [],
+    loading: false,
+    error:  null
+  })
 
+  // ========== HELPER FUNCTIONS ==========
+  
+  const setLoading = (loading) => {
+    setState(prev => ({ ...prev, loading }))
+  }
+
+  const setError = (error) => {
+    setState(prev => ({ ... prev, error }))
+  }
+
+  const clearError = () => {
+    setState(prev => ({ ...prev, error: null }))
+  }
+
+  // ========== INITIALIZATION ==========
+  
+  // Načtení uživatele z localStorage při startu
   useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser')
+    if (savedUser) {
+      setState(prev => ({ ...prev, currentUser: savedUser }))
+    }
+  }, [])
+
+  // Načtení seznamů při změně uživatele
+  useEffect(() => {
+    if (state.currentUser) {
+      loadLists()
+      loadNotifications()
+    }
+  }, [state.currentUser])
+
+  // ========== API CALLS ==========
+  
+  const loadLists = async () => {
+    setLoading(true)
+    clearError()
+    
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(model))
-    } catch (e) {
-      console.warn('Chyba při ukládání', e)
+      console.log('🔄 Loading lists...')
+      const response = await apiService.getLists()
+      
+      if (response. success) {
+        setState(prev => ({ 
+          ...prev, 
+          lists:  response.data,
+          loading: false 
+        }))
+        console.log('✅ Lists loaded:', response.data. length)
+      } else {
+        throw new Error(response. error || 'Chyba při načítání seznamů')
+      }
+    } catch (err) {
+      console.error('❌ Error loading lists:', err)
+      setError(err. message)
+      setLoading(false)
     }
-  }, [model])
-
-  const createList = (name) => {
-    if (! model.currentUser) {
-      alert('Přihlas se, abys mohl vytvořit seznam.')
-      return
-    }
-    const newList = makeList({ name, owner: model.currentUser })
-    setModel(prev => ({
-      ...prev,
-      lists: [...prev.lists, newList]
-    }))
-    return newList. id
   }
 
-  const deleteList = (listId) => {
-    const list = model.lists. find(l => l.id === listId)
-    if (!list || list.owner !== model. currentUser) {
-      alert('Nemáš oprávnění smazat tento seznam.')
-      return
-    }
+  const loadNotifications = async () => {
+    if (!state.currentUser) return
     
-    setModel(prev => ({
-      ...prev,
-      lists: prev.lists.filter(l => l.id !== listId)
-    }))
-  }
-
-  const updateList = (listId, updates) => {
-    setModel(prev => ({
-      ...prev,
-      lists: prev.lists.map(list => 
-        list.id === listId ? { ...list, ...updates } :  list
-      )
-    }))
-  }
-
-  // Nová funkce:  Žádost o přístup
-  const requestAccess = (listId, message = '') => {
-    if (!model.currentUser) {
-      alert('Musíš být přihlášen')
-      return
+    try {
+      const response = await apiService.getNotifications(state.currentUser)
+      
+      if (response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          notifications: response.data 
+        }))
+        console.log('🔔 Notifications loaded:', response.data.length)
+      }
+    } catch (err) {
+      console.error('❌ Error loading notifications:', err)
+      // Není kritická chyba, takže nestavíme error state
     }
-
-    const list = model.lists. find(l => l.id === listId)
-    if (!list) return
-
-    const existingRequest = (list.accessRequests || []).find(r => r.username === model.currentUser)
-    if (existingRequest) {
-      alert('Žádost už byla odeslána')
-      return
-    }
-
-    const newRequest = {
-      id: uid(),
-      username: model.currentUser,
-      message: message.trim() || `${model.currentUser} žádá o přístup k seznamu`,
-      timestamp: Date.now()
-    }
-
-    // Přidání žádosti k seznamu
-    updateList(listId, {
-      accessRequests: [...(list.accessRequests || []), newRequest]
-    })
-
-    // Přidání notifikace vlastníkovi
-    const notification = {
-      id: uid(),
-      type: 'access_request',
-      listId,
-      listName: list.name,
-      fromUser: model.currentUser,
-      message: newRequest.message,
-      timestamp: Date. now(),
-      read: false
-    }
-
-    setModel(prev => ({
-      ...prev,
-      notifications: [...prev.notifications, notification]
-    }))
-
-    alert('Žádost byla odeslána vlastníkovi seznamu')
   }
 
-  // Schválení žádosti
-  const approveAccessRequest = (listId, requestId) => {
-    const list = model.lists.find(l => l.id === listId)
-    if (!list || list.owner !== model.currentUser) return
-
-    const request = (list.accessRequests || []).find(r => r.id === requestId)
-    if (!request) return
-
-    // Přidat uživatele mezi členy
-    const newMembers = [... (list.members || []), request.username]
-    
-    // Odstranit žádost
-    const newRequests = (list.accessRequests || []).filter(r => r.id !== requestId)
-
-    updateList(listId, {
-      members: newMembers,
-      accessRequests: newRequests
-    })
-
-    // Označit notifikaci jako vyřešenou
-    setModel(prev => ({
-      ...prev,
-      notifications: prev.notifications.map(n => 
-        n.type === 'access_request' && n.listId === listId && n.fromUser === request.username
-          ?  { ...n, read: true }
-          : n
-      )
-    }))
-
-    alert(`Uživatel ${request. username} byl přidán do seznamu`)
-  }
-
-  // Zamítnutí žádosti
-  const rejectAccessRequest = (listId, requestId) => {
-    const list = model. lists.find(l => l.id === listId)
-    if (!list || list.owner !== model.currentUser) return
-
-    const newRequests = (list.accessRequests || []).filter(r => r.id !== requestId)
-    updateList(listId, { accessRequests: newRequests })
-
-    // Označit notifikaci jako vyřešenou
-    setModel(prev => ({
-      ... prev,
-      notifications: prev.notifications.map(n => 
-        n.type === 'access_request' && n.listId === listId
-          ? { ...n, read: true }
-          : n
-      )
-    }))
-  }
-
+  // ========== USER MANAGEMENT ==========
+  
   const login = (username) => {
-    setModel(prev => ({ ...prev, currentUser: username }))
+    const trimmedUsername = username. trim()
+    if (!trimmedUsername) {
+      setError('Uživatelské jméno nemůže být prázdné')
+      return
+    }
+
+    console.log('👤 Logging in user:', trimmedUsername)
+    localStorage.setItem('currentUser', trimmedUsername)
+    setState(prev => ({ 
+      ...prev, 
+      currentUser: trimmedUsername,
+      error: null 
+    }))
   }
 
   const logout = () => {
-    setModel(prev => ({ ...prev, currentUser: null }))
-  }
-
-  const canDeleteList = (list) => {
-    return list && model.currentUser && list.owner === model.currentUser
-  }
-
-  // Počet nepřečtených notifikací pro aktuálního uživatele
-  const getUnreadNotifications = () => {
-    return model.notifications.filter(n => 
-      ! n.read && 
-      model.lists.some(list => list.id === n.listId && list.owner === model.currentUser)
-    )
-  }
-
-  const markNotificationAsRead = (notificationId) => {
-    setModel(prev => ({
+    console.log('👋 Logging out user')
+    localStorage.removeItem('currentUser')
+    setState(prev => ({
       ...prev,
-      notifications: prev.notifications.map(n => 
-        n. id === notificationId ? { ...n, read: true } : n
-      )
+      currentUser:  null,
+      lists: [],
+      notifications: [],
+      error: null
     }))
   }
 
-  const value = {
-    ... model,
+  // ========== LIST MANAGEMENT ==========
+  
+  const createList = async (name) => {
+    if (!state.currentUser) {
+      setError('Musíte být přihlášeni pro vytvoření seznamu')
+      return null
+    }
+
+    if (!name?. trim()) {
+      setError('Název seznamu nemůže být prázdný')
+      return null
+    }
+
+    setLoading(true)
+    clearError()
+    
+    try {
+      console.log('📝 Creating list:', name)
+      const response = await apiService. createList(name. trim(), state.currentUser)
+      
+      if (response. success) {
+        setState(prev => ({ 
+          ...prev, 
+          lists: [...prev.lists, response.data],
+          loading: false 
+        }))
+        console.log('✅ List created:', response.data.id)
+        return response.data. id
+      } else {
+        throw new Error(response.error || 'Chyba při vytváření seznamu')
+      }
+    } catch (err) {
+      console.error('❌ Error creating list:', err)
+      setError(err. message)
+      setLoading(false)
+      return null
+    }
+  }
+
+  const updateList = async (listId, updates) => {
+    if (!listId || !updates) return
+
+    // Optimistic update - aktualizace UI před API voláním
+    setState(prev => ({
+      ...prev,
+      lists: prev.lists.map(list => 
+        list. id === listId ?  { ...list, ... updates } : list
+      )
+    }))
+
+    try {
+      console. log('📝 Updating list:', listId, updates)
+      const response = await apiService.updateList(listId, updates)
+      
+      if (response. success) {
+        // Aktualizace s daty ze serveru (případné rozdíly)
+        setState(prev => ({
+          ...prev,
+          lists: prev.lists.map(list => 
+            list.id === listId ? response.data : list
+          )
+        }))
+        console.log('✅ List updated:', listId)
+      } else {
+        // Rollback při chybě
+        loadLists()
+        throw new Error(response. error || 'Chyba při aktualizaci seznamu')
+      }
+    } catch (err) {
+      console.error('❌ Error updating list:', err)
+      // Rollback - znovu načtení dat
+      loadLists()
+      setError(err.message)
+    }
+  }
+
+  const deleteList = async (listId) => {
+    const list = state.lists. find(l => l.id === listId)
+    if (!list) {
+      setError('Seznam nenalezen')
+      return
+    }
+
+    if (list.owner !== state. currentUser) {
+      setError('Nemáte oprávnění smazat tento seznam')
+      return
+    }
+
+    setLoading(true)
+    clearError()
+    
+    try {
+      console. log('🗑️ Deleting list:', listId)
+      const response = await apiService.deleteList(listId)
+      
+      if (response.success) {
+        setState(prev => ({ 
+          ...prev, 
+          lists: prev.lists.filter(l => l.id !== listId),
+          loading: false 
+        }))
+        console.log('✅ List deleted:', listId)
+      } else {
+        throw new Error(response.error || 'Chyba při mazání seznamu')
+      }
+    } catch (err) {
+      console.error('❌ Error deleting list:', err)
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
+  // ========== ACCESS REQUEST MANAGEMENT ==========
+  
+  const requestAccess = async (listId, message = '') => {
+    if (!state.currentUser) {
+      setError('Musíte být přihlášeni')
+      return
+    }
+
+    try {
+      console. log('🔑 Requesting access to list:', listId)
+      const response = await apiService.requestAccess(listId, state.currentUser, message)
+      
+      if (response.success) {
+        // Aktualizace seznamu s novou žádostí
+        setState(prev => ({
+          ...prev,
+          lists: prev.lists.map(list => 
+            list.id === listId 
+              ? { 
+                  ...list, 
+                  accessRequests: [...(list.accessRequests || []), response.data]
+                }
+              : list
+          )
+        }))
+        console.log('✅ Access requested:', response.data.id)
+      } else {
+        throw new Error(response.error || 'Chyba při žádosti o přístup')
+      }
+    } catch (err) {
+      console.error('❌ Error requesting access:', err)
+      setError(err. message)
+    }
+  }
+
+  const approveAccessRequest = async (listId, requestId) => {
+    try {
+      console. log('✅ Approving access request:', requestId)
+      const response = await apiService.approveAccessRequest(listId, requestId)
+      
+      if (response.success) {
+        // Aktualizace seznamu - přidání člena, odstranění žádosti
+        setState(prev => ({
+          ... prev,
+          lists: prev.lists. map(list => 
+            list.id === listId 
+              ? {
+                  ...list,
+                  members: [...(list. members || []), response.data. approvedUser],
+                  accessRequests: (list.accessRequests || []).filter(r => r.id !== requestId)
+                }
+              :  list
+          )
+        }))
+        
+        // Znovu načíst notifikace
+        loadNotifications()
+        console.log('✅ Access approved for:', response.data.approvedUser)
+      } else {
+        throw new Error(response.error || 'Chyba při schvalování žádosti')
+      }
+    } catch (err) {
+      console.error('❌ Error approving access:', err)
+      setError(err.message)
+    }
+  }
+
+  const rejectAccessRequest = async (listId, requestId) => {
+    try {
+      console.log('❌ Rejecting access request:', requestId)
+      const response = await apiService. rejectAccessRequest(listId, requestId)
+      
+      if (response.success) {
+        // Aktualizace seznamu - odstranění žádosti
+        setState(prev => ({
+          ...prev,
+          lists: prev. lists.map(list => 
+            list.id === listId 
+              ? {
+                  ...list,
+                  accessRequests: (list.accessRequests || []).filter(r => r.id !== requestId)
+                }
+              : list
+          )
+        }))
+        
+        // Znovu načíst notifikace
+        loadNotifications()
+        console.log('✅ Access rejected for:', response.data.rejectedUser)
+      } else {
+        throw new Error(response.error || 'Chyba při zamítání žádosti')
+      }
+    } catch (err) {
+      console.error('❌ Error rejecting access:', err)
+      setError(err.message)
+    }
+  }
+
+  // ========== NOTIFICATION MANAGEMENT ==========
+  
+  const getUnreadNotifications = () => {
+    return state.notifications.filter(n => 
+      ! n.read && 
+      state.lists.some(list => list.id === n.listId && list.owner === state. currentUser)
+    )
+  }
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      // Optimistic update
+      setState(prev => ({
+        ...prev,
+        notifications:  prev.notifications.map(n => 
+          n.id === notificationId ?  { ...n, read: true } : n
+        )
+      }))
+
+      const response = await apiService.markNotificationAsRead(notificationId)
+      
+      if (! response.success) {
+        // Rollback při chybě
+        loadNotifications()
+        throw new Error(response.error || 'Chyba při označování notifikace')
+      }
+      
+      console.log('✅ Notification marked as read:', notificationId)
+    } catch (err) {
+      console.error('❌ Error marking notification as read:', err)
+      loadNotifications() // Rollback
+    }
+  }
+
+  // ========== UTILITY FUNCTIONS ==========
+  
+  const canDeleteList = (list) => {
+    return list && state.currentUser && list.owner === state.currentUser
+  }
+
+  const isListMember = (list) => {
+    if (!list || !state.currentUser) return false
+    return list.owner === state.currentUser || (list.members || []).includes(state.currentUser)
+  }
+
+  const getListsByFilter = (filterType = 'all') => {
+    if (! state.currentUser) return state.lists
+
+    switch (filterType) {
+      case 'mine':
+        return state.lists.filter(list => list.owner === state.currentUser)
+      case 'shared':
+        return state.lists.filter(list => 
+          list.owner !== state.currentUser && 
+          (list.members || []).includes(state.currentUser)
+        )
+      default:
+        return state.lists. filter(list => isListMember(list))
+    }
+  }
+
+  const refreshData = async () => {
+    if (state.currentUser) {
+      await Promise.all([
+        loadLists(),
+        loadNotifications()
+      ])
+    }
+  }
+
+  // ========== CONTEXT VALUE ==========
+  
+  const contextValue = {
+    // State
+    lists: state.lists,
+    currentUser: state.currentUser,
+    notifications: state.notifications,
+    loading: state.loading,
+    error: state.error,
+
+    // User management
+    login,
+    logout,
+
+    // List management
     createList,
-    deleteList,
     updateList,
+    deleteList,
+    canDeleteList,
+    isListMember,
+    getListsByFilter,
+
+    // Access request management
     requestAccess,
     approveAccessRequest,
     rejectAccessRequest,
-    login,
-    logout,
-    canDeleteList,
+
+    // Notification management
     getUnreadNotifications,
-    markNotificationAsRead
+    markNotificationAsRead,
+
+    // Utility
+    clearError,
+    refreshData,
+    loadLists
   }
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   )
+}
+
+// Export pro debugging
+if (process.env.NODE_ENV === 'development') {
+  window.AppContext = AppContext
 }

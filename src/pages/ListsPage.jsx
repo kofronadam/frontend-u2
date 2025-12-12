@@ -1,96 +1,293 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import LoginModal from '../components/LoginModal'
 import ListCard from '../components/ListCard'
 import ListFilter from '../components/ListFilter'
+import LoginModal from '../components/LoginModal'
 import NotificationBell from '../components/NotificationBell'
+import LoadingSpinner from '../components/LoadingSpinner'
+import ErrorMessage from '../components/ErrorMessage'
+import { apiService } from '../services/apiService'
 
 export default function ListsPage() {
-  const { lists, currentUser, createList, logout } = useApp() // přidat logout
+  const { 
+    lists, 
+    currentUser, 
+    loading, 
+    error, 
+    login, 
+    logout, 
+    createList, 
+    getListsByFilter,
+    clearError,
+    refreshData
+  } = useApp()
+
+  // Local state
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newListName, setNewListName] = useState('')
   const [filterText, setFilterText] = useState('')
   const [filterOwner, setFilterOwner] = useState('all')
 
-  const filteredLists = lists.filter(list => {
-    const matchesText = list.name. toLowerCase().includes(filterText.toLowerCase())
-    const matchesOwner = filterOwner === 'all' || 
-                        (filterOwner === 'mine' && list.owner === currentUser) ||
-                        (filterOwner === 'shared' && list.members.includes(currentUser))
-    return matchesText && matchesOwner
-  })
-
-  const handleCreateList = () => {
-    if (!currentUser) {
-      setShowLoginModal(true)
-      return
+  // Filtered lists based on search and owner filter
+  const filteredLists = useMemo(() => {
+    let filtered = getListsByFilter(filterOwner)
+    
+    if (filterText. trim()) {
+      const searchTerm = filterText.trim().toLowerCase()
+      filtered = filtered.filter(list =>
+        list.name.toLowerCase().includes(searchTerm) ||
+        list.owner.toLowerCase().includes(searchTerm) ||
+        (list.members || []).some(member => member.toLowerCase().includes(searchTerm))
+      )
     }
-    const name = prompt('Název seznamu:')
-    if (name) {
-      createList(name)
-    }
-  }
+    
+    return filtered
+  }, [lists, filterOwner, filterText, getListsByFilter])
 
+  // Event handlers
   const handleLogout = () => {
     if (window.confirm('Opravdu se chcete odhlásit?')) {
       logout()
     }
   }
 
+  const handleCreateList = async () => {
+    const name = newListName.trim()
+    if (!name) {
+      alert('Zadejte název seznamu')
+      return
+    }
+
+    const listId = await createList(name)
+    if (listId) {
+      setNewListName('')
+      setShowCreateModal(false)
+      // Můžeme přesměrovat na nový seznam
+      // navigate(`/list/${listId}`)
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleCreateList()
+    }
+  }
+
+  const handleRefresh = async () => {
+    await refreshData()
+  }
+
+  // Render loading state
+  if (loading && lists.length === 0) {
+    return (
+      <div className="lists-page">
+        <div className="container">
+          <LoadingSpinner />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="lists-page">
-      <header className="page-header">
-        <h1>Nákupní seznamy</h1>
-        <div className="header-actions">
-          {currentUser && <NotificationBell />}
-          {currentUser ?  (
-            <div className="user-section">
-              <span className="user-info">
-                Přihlášen: <strong>{currentUser}</strong>
-              </span>
-              <button onClick={handleLogout} className="logout-button">
-                Odhlásit se
+      <div className="container">
+        {/* Header */}
+        <header className="page-header">
+          <div>
+            <h1>Nákupní seznamy</h1>
+            <p className="text-gray-600">
+              {currentUser ? (
+                <>Správa vašich nákupních seznamů • {filteredLists.length} seznamů</>
+              ) : (
+                'Přihlaste se pro správu nákupních seznamů'
+              )}
+            </p>
+          </div>
+          
+          <div className="header-actions">
+            {currentUser && <NotificationBell />}
+            
+            {currentUser ? (
+              <div className="user-section">
+                <div className="user-info">
+                  Přihlášen jako: <strong>{currentUser}</strong>
+                </div>
+                <button onClick={handleRefresh} className="btn btn-secondary btn-sm" title="Obnovit data">
+                  🔄
+                </button>
+                <button onClick={handleLogout} className="btn btn-danger btn-sm">
+                  Odhlásit se
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowLoginModal(true)} className="btn btn-primary">
+                Přihlásit se
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Error handling */}
+        {error && (
+          <ErrorMessage 
+            message={error} 
+            onRetry={clearError}
+          />
+        )}
+
+        {currentUser ?  (
+          <>
+            {/* Create new list button */}
+            <div className="mb-6">
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="btn btn-success btn-lg"
+              >
+                + Vytvořit nový seznam
               </button>
             </div>
-          ) : (
-            <button onClick={() => setShowLoginModal(true)} className="login-button">
+
+            {/* Filters */}
+            {lists.length > 0 && (
+              <ListFilter
+                filterText={filterText}
+                setFilterText={setFilterText}
+                filterOwner={filterOwner}
+                setFilterOwner={setFilterOwner}
+                currentUser={currentUser}
+              />
+            )}
+
+            {/* Lists grid */}
+            {filteredLists.length > 0 ? (
+              <>
+                {filterText && (
+                  <div className="mb-4">
+                    <p className="text-gray-600">
+                      Nalezeno {filteredLists. length} seznamů pro "{filterText}"
+                    </p>
+                  </div>
+                )}
+                
+                <div className="lists-grid">
+                  {filteredLists.map(list => (
+                    <ListCard key={list.id} list={list} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="no-lists">
+                {filterText ?  (
+                  <>
+                    <h3>🔍 Žádné výsledky</h3>
+                    <p>Nenalezeny žádné seznamy pro hledaný výraz "{filterText}"</p>
+                    <button 
+                      onClick={() => setFilterText('')}
+                      className="btn btn-secondary"
+                    >
+                      Zrušit vyhledávání
+                    </button>
+                  </>
+                ) : lists.length === 0 ? (
+                  <>
+                    <h3>📝 Žádné seznamy</h3>
+                    <p>Zatím nemáte žádné nákupní seznamy. </p>
+                    <button 
+                      onClick={() => setShowCreateModal(true)}
+                      className="btn btn-primary"
+                    >
+                      Vytvořit první seznam
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3>🚫 Žádný přístup</h3>
+                    <p>Nemáte přístup k žádným seznamům v kategorii "{
+                      filterOwner === 'mine' ? 'Moje seznamy' : 
+                      filterOwner === 'shared' ? 'Sdílené se mnou' :  'Všechny'
+                    }"</p>
+                    <button 
+                      onClick={() => setFilterOwner('all')}
+                      className="btn btn-secondary"
+                    >
+                      Zobrazit všechny dostupné
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="no-access">
+            <h3>👋 Vítejte!</h3>
+            <p>Pro správu nákupních seznamů se musíte přihlásit. </p>
+            <button 
+              onClick={() => setShowLoginModal(true)}
+              className="btn btn-primary btn-lg"
+            >
               Přihlásit se
             </button>
-          )}
-        </div>
-      </header>
+          </div>
+        )}
 
-      <div className="actions">
-        <button onClick={handleCreateList} className="create-button">
-          + Nový seznam
-        </button>
-      </div>
+        {/* Login Modal */}
+        {showLoginModal && (
+          <LoginModal onClose={() => setShowLoginModal(false)} />
+        )}
 
-      <ListFilter 
-        filterText={filterText}
-        setFilterText={setFilterText}
-        filterOwner={filterOwner}
-        setFilterOwner={setFilterOwner}
-        currentUser={currentUser}
-      />
-
-      <div className="lists-grid">
-        {filteredLists.map(list => (
-          <ListCard key={list.id} list={list} />
-        ))}
-        {filteredLists.length === 0 && (
-          <div className="no-lists">
-            {filterText || filterOwner !== 'all' 
-              ? 'Žádné seznamy neodpovídají filtru'
-              : 'Zatím nemáte žádné seznamy'
-            }
+        {/* Create List Modal */}
+        {showCreateModal && (
+          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Vytvořit nový seznam</h3>
+                <button 
+                  onClick={() => setShowCreateModal(false)} 
+                  className="modal-close"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="list-name">
+                    Název seznamu: 
+                  </label>
+                  <input
+                    id="list-name"
+                    type="text"
+                    className="form-input"
+                    placeholder="např. Nákup do Tesca, Víkendový výlet..."
+                    value={newListName}
+                    onChange={(e) => setNewListName(e. target.value)}
+                    onKeyPress={handleKeyPress}
+                    autoFocus
+                    maxLength={100}
+                  />
+                </div>
+                
+                <div className="modal-actions">
+                  <button 
+                    onClick={() => setShowCreateModal(false)}
+                    className="btn btn-secondary"
+                  >
+                    Zrušit
+                  </button>
+                  <button 
+                    onClick={handleCreateList}
+                    disabled={!newListName.trim() || loading}
+                    className="btn btn-primary"
+                  >
+                    {loading ? 'Vytváří se...' : 'Vytvořit seznam'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} />
-      )}
     </div>
   )
 }

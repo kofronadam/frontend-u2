@@ -1226,3 +1226,80 @@ button:not([class*="btn"]):hover {
 }
 
 /* Konec souboru */
+
+/* Additional styles for ListDetailPage */
+.grid {
+  display: grid;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.bg-gray-50 {
+  background-color: var(--gray-50);
+}
+
+.bg-blue-50 {
+  background-color: #eff6ff;
+}
+
+.border-blue-200 {
+  border-color: #bfdbfe;
+}
+
+.text-blue-700 {
+  color: #1d4ed8;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive grid */
+@media (min-width: 768px) {
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Edit name input styling */
+.form-input[style*="font-size"] {
+  border: 2px solid var(--accent-500);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+/* Status badges in header */
+.badge.mr-2 {
+  margin-right: 0.5rem;
+}
