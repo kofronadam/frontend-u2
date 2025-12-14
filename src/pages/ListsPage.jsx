@@ -113,9 +113,7 @@ export default function ListsPage() {
                 <div className="user-info">
                   Přihlášen jako: <strong>{currentUser}</strong>
                 </div>
-                <button onClick={handleRefresh} className="btn btn-secondary btn-sm" title="Obnovit data">
-                  🔄
-                </button>
+                
                 <button onClick={handleLogout} className="btn btn-danger btn-sm">
                   Odhlásit se
                 </button>

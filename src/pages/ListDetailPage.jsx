@@ -292,14 +292,7 @@ export default function ListDetailPage() {
           <div className="header-actions">
             <NotificationBell />
             
-            <button 
-              onClick={handleRefresh} 
-              className="btn btn-secondary btn-sm" 
-              title="Obnovit data"
-              disabled={localLoading}
-            >
-              🔄
-            </button>
+            
             
             {isOwner && (
               <button 
