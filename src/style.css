@@ -1303,3 +1303,45 @@ button:not([class*="btn"]):hover {
 .badge.mr-2 {
   margin-right: 0.5rem;
 }
+
+/* Theme variables */
+:root {
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --text-primary: #111827;
+  --text-muted: #6b7280;
+  --accent: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --card: #0f1724;
+  --text-primary: #e6eef8;
+  --text-muted: #94a3b8;
+  --accent: #60a5fa;
+}
+
+/* apply */
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.list-card {
+  background: var(--card);
+  color: var(--text-primary);
+}
+
+/* mode / lang  button */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions > .lang-theme {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
