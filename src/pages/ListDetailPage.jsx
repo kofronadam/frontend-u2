@@ -7,11 +7,13 @@ import AccessRequest from '../components/AccessRequest'
 import AccessRequests from '../components/AccessRequests'
 import NotificationBell from '../components/NotificationBell'
 import LoginModal from '../components/LoginModal'
-import LoadingSpinner from '../components/LoadingSpinner'
-import ErrorMessage from '../components/ErrorMessage'
-import { apiService } from '../services/apiService'
+import ProgressDonut from '../components/ProgressDonut'
+import { useTranslation } from 'react-i18next'
+import ThemeToggle from '../components/ThemeToggle'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 export default function ListDetailPage() {
+  const { t } = useTranslation()
   const { listId } = useParams()
   const navigate = useNavigate()
   const { 
@@ -36,8 +38,12 @@ export default function ListDetailPage() {
   // Find current list
   const list = lists.find(l => l.id === listId)
   const hasAccess = list && currentUser && isListMember(list)
-  const isOwner = list && currentUser && list. owner === currentUser
+  const isOwner = list && currentUser && list.owner === currentUser
   const isMember = list && currentUser && (list.members || []).includes(currentUser)
+
+  // compute counts for donut
+  const doneCount = (list?.items || []).filter(i => i.done).length
+  const totalCount = (list?.items || []).length
 
   // Effects
   useEffect(() => {
@@ -127,7 +133,7 @@ export default function ListDetailPage() {
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSaveName()
-    } else if (e. key === 'Escape') {
+    } else if (e.key === 'Escape') {
       handleCancelEdit()
     }
   }
@@ -290,9 +296,18 @@ export default function ListDetailPage() {
           </div>
           
           <div className="header-actions">
+            <ThemeToggle />
+            <LanguageSwitcher />
             <NotificationBell />
             
-            
+            <button 
+              onClick={handleRefresh} 
+              className="btn btn-secondary btn-sm" 
+              title="Obnovit data"
+              disabled={localLoading}
+            >
+              🔄
+            </button>
             
             {isOwner && (
               <button 
@@ -336,17 +351,14 @@ export default function ListDetailPage() {
           </div>
         )}
 
-        {/* List info */}
+        {/* List info + Progress donut */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+            <ProgressDonut done={doneCount} total={totalCount} size={140} />
             <div>
-              <strong>Vlastník:</strong> {list.owner}
-            </div>
-            <div>
-              <strong>Počet členů:</strong> {(list.members || []).length}
-            </div>
-            <div>
-              <strong>Počet položek:</strong> {(list.items || []).length}
+              <div><strong>{t('owner') || 'Vlastník'}:</strong> {list.owner}</div>
+              <div><strong>{t('members') || 'Členové'}:</strong> {(list.members || []).length}</div>
+              <div><strong>{t('items_done', { done: doneCount, total: totalCount })}</strong></div>
             </div>
           </div>
         </div>

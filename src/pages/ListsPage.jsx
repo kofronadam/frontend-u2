@@ -7,6 +7,8 @@ import NotificationBell from '../components/NotificationBell'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 import { apiService } from '../services/apiService'
+import ThemeToggle from '../components/ThemeToggle'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 export default function ListsPage() {
   const { 
@@ -105,8 +107,15 @@ export default function ListsPage() {
             </p>
           </div>
           
-          <div className="header-actions">
-            {currentUser && <NotificationBell />}
+          
+            <div className="header-actions">
+              {currentUser && <NotificationBell />}
+
+              {/* Language + Theme */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginRight: 8 }}>
+                <LanguageSwitcher />
+                <ThemeToggle />
+                </div>
             
             {currentUser ? (
               <div className="user-section">
