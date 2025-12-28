@@ -48,25 +48,26 @@ export default function AccessRequests({ list }) {
                 {request.message || "Žádá o přístup k seznamu"}
               </p>
               
+              <div className="detail-button"> 
               <button 
                 onClick={() => openRequestDetail(request)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
+                className="btn">
                 Zobrazit detail →
               </button>
+              </div>
             </div>
             
             <div className="request-actions">
               <button 
                 onClick={() => handleApprove(request)}
-                className="btn btn-success btn-sm"
+                className="btn btn-approve"
                 title="Schválit žádost"
               >
                 ✓
               </button>
               <button 
                 onClick={() => handleReject(request)}
-                className="btn btn-danger btn-sm"
+                className="btn btn-reject"
                 title="Zamítnout žádost"
               >
                 ✕

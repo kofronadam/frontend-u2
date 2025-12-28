@@ -222,7 +222,7 @@ export default function ListDetailPage() {
               <NotificationBell />
               <div className="user-section">
                 <div className="user-info">
-                  Přihlášen jako: <strong>{currentUser}</strong>
+                  Přihlášen: <strong>{currentUser}</strong>
                 </div>
                 <button onClick={handleLogout} className="btn btn-danger btn-sm">
                   Odhlásit se
@@ -245,7 +245,7 @@ export default function ListDetailPage() {
         <header className="detail-header">
           <div className="flex items-center gap-4">
             <Link to="/" className="back-button">
-              ← Zpět na seznamy
+             Zpět na seznamy
             </Link>
             
             {isEditing ?  (

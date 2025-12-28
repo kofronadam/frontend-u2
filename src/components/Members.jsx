@@ -91,13 +91,13 @@ export default function Members({ list }) {
               {isOwner && owner !== name && (
                 <>
                   <button 
-                    className="small-btn" 
+                    className="btn-sm btn-success" 
                     onClick={() => handleTransferOwnership(name)}
                   >
                     Převést
                   </button>
                   <button 
-                    className="small-btn danger" 
+                    className="btn-sm btn-danger" 
                     onClick={() => handleRemoveMember(name)}
                   >
                     Odebrat

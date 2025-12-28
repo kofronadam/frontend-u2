@@ -12,8 +12,12 @@ export default function ThemeToggle() {
   })
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem(KEY, theme) } catch {}
+    try {
+      document.documentElement.setAttribute('data-theme', theme)
+      // optional: body class for easier scoping
+      document.body.classList.toggle('theme-dark', theme === 'dark')
+      localStorage.setItem(KEY, theme)
+    } catch (e) {}
   }, [theme])
 
   return (
@@ -22,7 +26,7 @@ export default function ThemeToggle() {
       onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
       title="Přepnout Light / Dark"
     >
-      {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+      {theme === 'light' ? '🌙' : '☀️'}
     </button>
   )
 }
