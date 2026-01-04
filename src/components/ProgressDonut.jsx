@@ -19,7 +19,7 @@ export default function ProgressDonut({ done = 0, total = 0, size = 100, showLab
   const accent = cssVar('--accent', '#10B981')
   const accentStrong = cssVar('--accent-strong', '#059669')
   const bgSegment = cssVar('--border', '#E5E7EB') // use border color as "track"
-  const textColor = cssVar('--text-primary', '#111827')
+  // NOTE: don't read --text-primary in JS; use CSS var directly so it updates with theme
 
   const data = useMemo(() => ({
     labels: ['Done', 'Remaining'],
@@ -61,7 +61,7 @@ export default function ProgressDonut({ done = 0, total = 0, size = 100, showLab
             transform: 'translate(-50%, -50%)',
             fontSize: Math.max(12, size * 0.20),
             fontWeight: 700,
-            color: textColor,
+            color: 'var(--text-primary)', // use CSS variable so color follows current theme
             pointerEvents: 'none'
           }}
           aria-hidden
