@@ -11,6 +11,9 @@ Funkce:
 - přidání / odebrání položky
 - nastavit položku jako vyřešenou (mám ji)
 - filtrovat položky (jen nevyřešené)
+- dark / light mode
+- možnost přepnout z češtiny do angličtiny
+- notifikace o událostech (žádost o přístup k nákupnímu seznamu)
 
 Spuštění:
 
